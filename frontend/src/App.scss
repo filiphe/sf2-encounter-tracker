@@ -1,0 +1,23 @@
+.grid {
+    display: grid;
+    &-center {
+        place-items: center;
+    }
+}
+
+.screen {
+    min-height: 100vh;
+}
+
+.card {
+    height: 160px;
+    aspect-ratio: 2;
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 0 0 4px hsl(0 0% 0% / 15%);
+}
+
+.column {
+    float: left;
+    width: 50%;
+}

@@ -1,0 +1,25 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTMX Example</title>
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+  <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
+</head>
+<body>
+  <!-- have a button POST a click via AJAX -->
+  <button hx-get="/creatures/" hx-ext=""json-enc" hx-target="#creature-list">
+    Click Me
+  </button>
+  <div>
+    <ul id="creature-list"></ul>
+  </div>
+  <input type="text" name="q"
+    hx-get="/trigger_delay"
+    hx-trigger="keyup changed delay:500ms"
+    hx-target="#search-results"
+    placeholder="Search...">
+<div id="search-results"></div>
+</body>
+</html>
