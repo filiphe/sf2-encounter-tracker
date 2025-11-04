@@ -24,19 +24,53 @@ class Size(Enum):
 class Creature(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str
+    level: int
+    creature_family: str
     source: str
     rarity: Rarity
     size: Size
     trait: str
-    level: int
     hp: str
+    hp_scale: str
     ac: str
+    ac_scale: str
     fortitude: str
+    fortitude_scale: str
     reflex: str
+    reflex_scale: str
     will: str
+    will_scale: str
+    immunity: str
+    resistance: str
+    weakness: str
+    creature_ability: str
+    perception: str
+    perception_scale: str
     sense: str
     speed: str
-    spoilers: str
+    attack_bonus:str
+    attack_bonus_scale: str
+    strike_damage_average: str
+    strike_damage_scale: str
+    spell_attack: str
+    spell_attack_scale: str
+    spell_dc: str
+    spell_dc_scale: str
+    spell: str
+    language: str
+    strength: str
+    strength_scale: str
+    dexterity: str
+    dexterity_scale: str
+    constitution: str
+    constitution_scale: str
+    intelligence: str
+    intelligence_scale: str
+    wisdom: str
+    wisdom_scale: str
+    charisma: str
+    charisma_scale: str
+    skill: str
 
 class CreatureFilter(BaseModel):
     max_level: int = Field(25, ge=-1, lt=26)
@@ -45,7 +79,7 @@ class CreatureFilter(BaseModel):
     limit: int = Field(100, gt=0, le=100)
     offset: int = Field(0, ge=0)
 
-sqlite_file_name = "2e.aonsrd.com-creature-data-new.db"
+sqlite_file_name = "2e.aonsrd.com-creature-data-extended.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}

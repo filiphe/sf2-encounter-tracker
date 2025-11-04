@@ -19,5 +19,48 @@
 
 .column {
     float: left;
-    width: 50%;
+    width: 33%;
+    overflow-y: scroll;
+    height: 100vh;
+    scrollbar-width: none;
+}
+
+.column-2 {
+    float: left;
+    width: 67%;
+    overflow-y: scroll;
+    height: 100vh;
+    scrollbar-width: none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+body {
+  color: #222;
+  background: #fff;
+  font: 100% system-ui;
+}
+a {
+  color: #0033cc;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #eee;
+    background: #121212;
+  }
+
+  body a {
+    color: #809fff;
+  }
 }
