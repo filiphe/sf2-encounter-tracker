@@ -9,17 +9,14 @@ function getRandomD20() {
 
 export default function CreatureRow(props) {
     return (
-        <tr>
+        <tr onClick={() => {
+            const currentCreature = { ...props.creature };
+            currentCreature.id = getRandomId();
+            currentCreature.initiative = Number(props.creature.perception.replace("+","")) + getRandomD20();
+            props.setSelectedCreatures(() => [...props.selectedCreatures(), currentCreature]);
+        }}>
             <td>{props.creature.name}</td>
             <td>{props.creature.level}</td>
-            <td>
-                <button onClick={() => {
-                    const currentCreature = { ...props.creature };
-                    currentCreature.id = getRandomId();
-                    currentCreature.initiative = Number(props.creature.perception.replace("+","")) + getRandomD20();
-                    props.setSelectedCreatures(() => [...props.selectedCreatures(), currentCreature]);
-                }}>Add</button>
-            </td>
         </tr>
     )
 }
