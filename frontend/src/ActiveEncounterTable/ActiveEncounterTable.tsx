@@ -9,13 +9,13 @@ export default function ActiveEncounterTable(props) {
             <div>
                 <PlayerCharacterCombatantAdder selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures} />
             </div>
-            <table>
+            <table class="table-fixed m-3">
                 <thead>
-                    <tr>
-                        <th>Initiative</th>
-                        <th>AC</th>
-                        <th>HP</th>
-                        <th>Name</th>
+                    <tr class="border-b-2 border-gray-300">
+                        <th class="p-3">Initiative</th>
+                        <th class="p-3">AC</th>
+                        <th class="p-3">HP</th>
+                        <th class="p-3">Name</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,7 +25,7 @@ export default function ActiveEncounterTable(props) {
                         </tr>
                     </Show>
                     <For each={props.sortedSelectedCreatures()}>
-                        {(creature, index) =>
+                        {(creature) =>
                             <ActiveEncounterRow creature={creature} selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures} />
                         }
                     </For>

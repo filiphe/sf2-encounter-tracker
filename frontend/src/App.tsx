@@ -3,7 +3,7 @@ import { createSignal, createResource, Switch, Show, Match, For } from 'solid-js
 import FilterableCreatureTable from './FilterableCreatureTable/FilterableCreatureTable';
 import ActiveEncounterTable from './ActiveEncounterTable/ActiveEncounterTable';
 
-import "./App.scss";
+import "./App.css";
 
 const fetchCreatures = async () => {
   const response = await fetch('http://localhost:8000/creatures/');
@@ -18,15 +18,17 @@ const App: Component = () => {
   const sortedSelectedCreatures = () => selectedCreatures().sort((a, b) => b.initiative - a.initiative);
 
   return (
-    <div class="row">
-      <h1>Starfinder 2e Encounter tracker</h1>
-      <div class="column">
-        <FilterableCreatureTable creatures={creatures} loading={creatures.loading} selectedCreatures={selectedCreatures} setSelectedCreatures={setSelectedCreatures}/>
+    <>
+      <h1 class="text-2xl font-bold">Starfinder 2e Encounter Tracker</h1>
+      <div class="flex flex-row">
+        <div class="basis-1/3 m-4">
+          <FilterableCreatureTable creatures={creatures} loading={creatures.loading} selectedCreatures={selectedCreatures} setSelectedCreatures={setSelectedCreatures}/>
+        </div>
+        <div class="basis-2/3">
+          <ActiveEncounterTable sortedSelectedCreatures={sortedSelectedCreatures} selectedCreatures={selectedCreatures} setSelectedCreatures={setSelectedCreatures} />
+        </div>
       </div>
-      <div class="column-2">
-        <ActiveEncounterTable sortedSelectedCreatures={sortedSelectedCreatures} selectedCreatures={selectedCreatures} setSelectedCreatures={setSelectedCreatures} />
-      </div>
-    </div>
+    </>
   );
 };
 

@@ -9,14 +9,14 @@ function getRandomD20() {
 
 export default function CreatureRow(props) {
     return (
-        <tr onClick={() => {
+        <tr class="m-8" onClick={() => {
             const currentCreature = { ...props.creature };
             currentCreature.id = getRandomId();
             currentCreature.initiative = Number(props.creature.perception.replace("+","")) + getRandomD20();
             props.setSelectedCreatures(() => [...props.selectedCreatures(), currentCreature]);
         }}>
-            <td>{props.creature.name}</td>
-            <td>{props.creature.level}</td>
+            <td class="text-right">{props.creature.name}</td>
+            <td class="text-right">{props.creature.level}</td>
         </tr>
     )
 }

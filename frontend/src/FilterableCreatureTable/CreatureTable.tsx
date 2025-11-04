@@ -21,7 +21,7 @@ export default function CreatureTable(props) {
                 <p>Loading creatures...</p>
             </Show>
             <Show when={!safeLoading()}>
-                <table>
+                <table class="table-auto">
                     <CreatureTableHeader />
                     <tbody>
                         <For each={filteredCreatures()}>
