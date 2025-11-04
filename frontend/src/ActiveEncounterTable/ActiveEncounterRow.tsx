@@ -2,11 +2,10 @@
 
 export default function ActiveEncounterRow(props) {
     return (
-        <tr>
+        <tr onDblClick={() => {
+            props.setSelectedCreatures(props.selectedCreatures().filter(creature => creature.id !== props.creature.id));
+        }}>
             <td>
-                <button onClick={() => {
-                    props.setSelectedCreatures(props.selectedCreatures().filter(creature => creature.id !== props.creature.id));
-                }}>Delete</button>
                 {props.creature.initiative}
             </td>
             <td>
