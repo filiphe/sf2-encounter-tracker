@@ -1,4 +1,4 @@
-import { children, createSignal } from "solid-js";
+import { children, Show, For } from "solid-js";
 import CreatureRow from "./CreatureRow";
 import CreatureTableHeader from "./CreatureTableHeader";
 
@@ -16,19 +16,17 @@ export default function CreatureTable(props) {
     }
 
     return (
-        <div>
+        <div class="font-bold">
             <Show when={safeLoading()}>
                 <p>Loading creatures...</p>
             </Show>
             <Show when={!safeLoading()}>
-                <table class="table-auto">
+                <div>
                     <CreatureTableHeader />
-                    <tbody>
-                        <For each={filteredCreatures()}>
-                            {(creature) => <CreatureRow creature={creature} selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures}/>}
-                        </For>
-                    </tbody>
-                </table>
+                    <For each={filteredCreatures()}>
+                        {(creature) => <CreatureRow creature={creature} selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures}/>}
+                    </For>
+                </div>
             </Show>
         </div>
     )

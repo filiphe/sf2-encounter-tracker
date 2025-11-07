@@ -1,9 +1,9 @@
 
 export default function CreatureTableHeader() {
     return (
-        <tr class="border-b-2 border-gray-300">
-            <th class="p-3">Name</th>
-            <th class="p-3">Level</th>
-        </tr>
+        <div class="grid grid-cols-2 w-3/4 border-b-2 border-gray-300">
+            <div class="p-3">Name</div>
+            <div class="p-3 text-center">Level</div>
+        </div>
     )
 }

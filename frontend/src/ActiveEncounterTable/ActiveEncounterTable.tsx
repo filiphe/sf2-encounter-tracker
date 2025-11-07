@@ -7,30 +7,26 @@ export default function ActiveEncounterTable(props) {
     return (
         <>
             <div>
-                <PlayerCharacterCombatantAdder selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures} />
+                <PlayerCharacterCombatantAdder sortedSelectedCreatures={props.sortedSelectedCreatures} selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures} />
             </div>
-            <table class="table-fixed m-3">
-                <thead>
-                    <tr class="border-b-2 border-gray-300">
-                        <th class="p-3">Initiative</th>
-                        <th class="p-3">AC</th>
-                        <th class="p-3">HP</th>
-                        <th class="p-3">Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <Show when={props.selectedCreatures().length === 0}>
-                        <tr>
-                            <td colspan="4">No combatants added yet.</td>
-                        </tr>
-                    </Show>
-                    <For each={props.sortedSelectedCreatures()}>
-                        {(creature) =>
-                            <ActiveEncounterRow creature={creature} selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures} />
-                        }
-                    </For>
-                </tbody>
-            </table>
+            <div class="grid grid-cols-4 w-3/4 m-3">
+                <div class="grid col-span-4 border-b-2 border-gray-300">
+                    <div class="grid grid-cols-4">
+                        <p>Initiative</p>
+                        <p>AC</p>
+                        <p>HP</p>
+                        <p>Name</p>
+                    </div>
+                </div>
+                <Show when={props.selectedCreatures().length === 0}>
+                        <div class="grid col-span-4">No combatants added yet.</div>
+                </Show>
+                <For each={props.sortedSelectedCreatures()}>
+                    {(creature) =>
+                        <ActiveEncounterRow creature={creature} selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures} />
+                    }
+                </For>
+            </div>
         </>
     )
 }

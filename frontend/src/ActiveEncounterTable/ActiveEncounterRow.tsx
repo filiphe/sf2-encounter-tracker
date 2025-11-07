@@ -1,28 +1,23 @@
 
 
 export default function ActiveEncounterRow(props) {
+    const isActiveCombatant = props.creature.activeCombatant;
     return (
-        <tr class="m-8" onDblClick={() => {
+        <div class="font-bold grid col-span-4 m-1 {{ ${isActiveCombatant} ? 'bg-red-500' : '' }} odd:bg-gray-300 dark:odd:bg-gray-500" onDblClick={() => {
             props.setSelectedCreatures(props.selectedCreatures().filter(creature => creature.id !== props.creature.id));
         }}>
-            <td class="text-center">
-                {props.creature.initiative}
-            </td>
-            <td class="text-center">
-                {props.creature.ac}
-            </td>
-            <td class="text-right">
+            <div class="grid grid-cols-4">
+                <p>{isActiveCombatant ? '👉' :''} {props.creature.initiative}</p>
+                <p>{props.creature.ac}</p>
                 <input
-                    class="bg-amber-200 rounded-lg m-1"
+                    class="bg-amber-200 dark:bg-amber-600 rounded-lg m-1"
                     type="number"
                     style="width: 40px; text-align: center;"
                     value={Number(props.creature.hp.split(" ")[0])}
                     placeholder="HP"
                     />
-            </td>
-            <td class="text-center">
-                {props.creature.name}
-            </td>
-        </tr>
+                <p>{props.creature.name}</p>
+            </div>
+        </div>
     )
 }
