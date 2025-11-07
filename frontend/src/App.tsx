@@ -10,7 +10,6 @@ const fetchCreatures = async () => {
   //const response = await fetch('http://localhost:8000/creatures/');
   const response = await fetch('../2e.aonsrd.com-creature-data-extended.json');
   const data = await response.json();
-  console.log(data);
   return data;
 }
 
