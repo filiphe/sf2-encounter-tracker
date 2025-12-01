@@ -21,7 +21,7 @@ const App: Component = () => {
 
   return (
     <>
-      <h1 class="text-2xl font-bold text-center bg-pink-200 rounded-2xl">Starfinder 2e Encounter Tracker</h1>
+      <h1 class="text-2xl font-bold text-center dark:text-black bg-pink-200 rounded-2xl">Starfinder 2e Encounter Tracker</h1>
       <div class="flex flex-row">
         <div class="basis-1/3 m-4">
           <FilterableCreatureTable creatures={creatures} loading={creatures.loading} selectedCreatures={selectedCreatures} setSelectedCreatures={setSelectedCreatures}/>
