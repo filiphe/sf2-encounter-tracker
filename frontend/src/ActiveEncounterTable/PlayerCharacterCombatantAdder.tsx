@@ -34,28 +34,59 @@ function setNextActiveCombatant(sortedSelectedCreatures, setSelectedCreatures) {
 
 export default function PlayerCharacterCombatantAdder(props) {
     return (
-        <div class="m-3">
-            <button class="bg-red-400 rounded-xl p-2 m-1 shadow-lg" onClick={() => {
-                setNextActiveCombatant(props.sortedSelectedCreatures, props.setSelectedCreatures);
-            }}>⏩</button>
-            <input class="rounded-xl p-2 m-1 shadow-xl" type="number" placeholder="Initiative skill value" id="pcPerception" style="width: 80px"/>
-            <input class="rounded-xl p-2 m-1 shadow-xl" type="text" placeholder="Player Character Name" id="pcName" />
-            <input class="rounded-xl p-2 m-1 shadow-xl" type="number" placeholder="AC" id="pcAC" style="width: 40px"/>
-            <button class="font-bold bg-blue-500 rounded-xl p-2 m-1 shadow-lg" onClick={() => {
-                const pcCombatant = {
-                    name: document.getElementById("pcName").value,
-                    perception: document.getElementById("pcPerception").value,
-                    ac: document.getElementById("pcAC").value,
-                    hp: "0",
-                    id: getRandomId(),
-                    initiative: Number(document.getElementById("pcPerception").value) + getRandomD20(),
-                };
-                props.setSelectedCreatures(() => [...props.selectedCreatures(), pcCombatant]);
-                document.getElementById("pcName").value = "";
-                document.getElementById("pcPerception").value = "";
-                document.getElementById("pcAC").value = "";
-            }}>Add Player Character</button>
-            <button class="font-bold bg-blue-500 rounded-xl p-2 m-1 shadow-lg" onClick={() => props.setSelectedCreatures([])}>Clear All</button>
+        <div class="flex flex-wrap items-center gap-2">
+            <button 
+                class="px-3 py-1.5 bg-red-400 hover:bg-red-500 text-white rounded-lg shadow transition-colors" 
+                onClick={() => {
+                    setNextActiveCombatant(props.sortedSelectedCreatures, props.setSelectedCreatures);
+                }}
+                title="Next combatant"
+            >
+                ⏩
+            </button>
+            <input 
+                class="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm w-20" 
+                type="number" 
+                placeholder="Init" 
+                id="pcPerception"
+            />
+            <input 
+                class="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm flex-1 min-w-[120px]" 
+                type="text" 
+                placeholder="Player Character Name" 
+                id="pcName" 
+            />
+            <input 
+                class="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm w-16" 
+                type="number" 
+                placeholder="AC" 
+                id="pcAC"
+            />
+            <button 
+                class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium shadow transition-colors"
+                onClick={() => {
+                    const pcCombatant = {
+                        name: document.getElementById("pcName").value,
+                        perception: document.getElementById("pcPerception").value,
+                        ac: document.getElementById("pcAC").value,
+                        hp: "0",
+                        id: getRandomId(),
+                        initiative: Number(document.getElementById("pcPerception").value) + getRandomD20(),
+                    };
+                    props.setSelectedCreatures(() => [...props.selectedCreatures(), pcCombatant]);
+                    document.getElementById("pcName").value = "";
+                    document.getElementById("pcPerception").value = "";
+                    document.getElementById("pcAC").value = "";
+                }}
+            >
+                + Add PC
+            </button>
+            <button 
+                class="px-3 py-1.5 bg-slate-400 hover:bg-slate-500 text-white rounded-lg font-medium shadow transition-colors"
+                onClick={() => props.setSelectedCreatures([])}
+            >
+                Clear All
+            </button>
         </div>
     )
 }

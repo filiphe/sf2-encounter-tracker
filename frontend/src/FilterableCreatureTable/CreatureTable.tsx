@@ -18,10 +18,10 @@ export default function CreatureTable(props) {
     return (
         <div class="font-bold">
             <Show when={safeLoading()}>
-                <p>Loading creatures...</p>
+                <p class="text-slate-600 dark:text-slate-400">Loading creatures...</p>
             </Show>
             <Show when={!safeLoading()}>
-                <div>
+                <div class="max-h-[500px] overflow-y-auto pr-2">
                     <CreatureTableHeader />
                     <For each={filteredCreatures()}>
                         {(creature) => <CreatureRow creature={creature} selectedCreatures={props.selectedCreatures} setSelectedCreatures={props.setSelectedCreatures}/>}

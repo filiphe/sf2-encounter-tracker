@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -14,12 +16,17 @@ input[type=number] {
 
 body {
   color: #222;
-  background: #fff;
+  background: #f8fafc;
 }
 
 @media (prefers-color-scheme: dark) {
   body {
-    color: #eee;
-    background: #121212;
+    color: #e2e8f0;
+    background: #0f172a;
   }
+}
+
+.dark body {
+  color: #e2e8f0;
+  background: #0f172a;
 }
