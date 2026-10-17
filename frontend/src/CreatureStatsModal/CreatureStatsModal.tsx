@@ -1,4 +1,6 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal, createMemo, Show, For } from "solid-js";
+import AbilityModal from "../components/AbilityModal";
+import { parseCreatureAbilities, isAttack, cleanAbilityName } from "../utils/abilitySearch";
 
 interface CreatureStatsModalProps {
   creature: any;
@@ -7,11 +9,33 @@ interface CreatureStatsModalProps {
   variant?: "modal" | "panel";
 }
 
+interface ParsedAbility {
+  raw: string;
+  name: string;
+  isAttack: boolean;
+}
+
 function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) => void; currentHp: () => number; setCurrentHp: (hp: number) => void }) {
+  const [selectedAbility, setSelectedAbility] = createSignal<string | null>(null);
+
   const handleHpChange = (newHp: number) => {
     props.setCurrentHp(newHp);
     props.onUpdateHp(newHp);
   };
+
+  // Parse creature abilities into individual entries
+  const parsedAbilities = createMemo((): ParsedAbility[] => {
+    const rawAbilities = parseCreatureAbilities(props.creature.creature_ability);
+    return rawAbilities.map(raw => ({
+      raw,
+      name: cleanAbilityName(raw),
+      isAttack: isAttack(raw)
+    }));
+  });
+
+  // Separate abilities from attacks
+  const abilities = createMemo(() => parsedAbilities().filter(a => !a.isAttack));
+  const attacks = createMemo(() => parsedAbilities().filter(a => a.isAttack));
 
   return (
     <>
@@ -52,10 +76,51 @@ function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) =
         </div>
       </div>
 
-      <div class="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
-        <p class="font-semibold text-slate-700 dark:text-slate-300 mb-1">Abilities</p>
-        <p class="text-slate-800 dark:text-slate-200 text-sm">{props.creature.creature_ability}</p>
-      </div>
+      {/* Abilities - clickable */}
+      <Show when={abilities().length > 0}>
+        <div class="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+          <p class="font-semibold text-slate-700 dark:text-slate-300 mb-2">Abilities</p>
+          <div class="flex flex-wrap gap-1.5">
+            <For each={abilities()}>
+              {(ability) => (
+                <button
+                  class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/50 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded text-sm transition-colors cursor-pointer"
+                  onClick={() => setSelectedAbility(ability.name)}
+                  title={`Click to view details for ${ability.name}`}
+                >
+                  {ability.name}
+                  <span class="text-xs opacity-60">🔗</span>
+                </button>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
+
+      {/* Attacks/Strikes - not clickable */}
+      <Show when={attacks().length > 0}>
+        <div class="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+          <p class="font-semibold text-slate-700 dark:text-slate-300 mb-1">Attacks</p>
+          <p class="text-slate-800 dark:text-slate-200 text-sm">
+            <For each={attacks()}>
+              {(attack, index) => (
+                <>
+                  {index() > 0 && ", "}
+                  {attack.raw}
+                </>
+              )}
+            </For>
+          </p>
+        </div>
+      </Show>
+
+      {/* Fallback: if no abilities parsed but creature_ability exists, show raw */}
+      <Show when={parsedAbilities().length === 0 && props.creature.creature_ability}>
+        <div class="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+          <p class="font-semibold text-slate-700 dark:text-slate-300 mb-1">Abilities</p>
+          <p class="text-slate-800 dark:text-slate-200 text-sm">{props.creature.creature_ability}</p>
+        </div>
+      </Show>
 
       <Show when={props.creature.spell}>
         <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
@@ -118,6 +183,15 @@ function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) =
       <div class="text-sm text-slate-500 dark:text-slate-400 mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
         <p><span class="font-semibold">Source:</span> {props.creature.source}</p>
       </div>
+
+      {/* Ability detail modal */}
+      <Show when={selectedAbility()}>
+        <AbilityModal
+          abilityName={selectedAbility()!}
+          creatureName={props.creature.name}
+          onClose={() => setSelectedAbility(null)}
+        />
+      </Show>
     </>
   );
 }
