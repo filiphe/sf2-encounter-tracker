@@ -46,7 +46,7 @@ const App: Component = () => {
       </header>
 
       <div class="flex flex-col lg:flex-row gap-4">
-        <div class="flex-1 min-w-0">
+        <div class="lg:w-1/4 min-w-0">
           <div class="bg-white dark:bg-slate-700 rounded-xl shadow-lg p-4">
             <h2 class="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3">
               🐛 Creature Browser
@@ -59,7 +59,7 @@ const App: Component = () => {
             />
           </div>
         </div>
-        <div class="flex-1 min-w-0">
+        <div class="lg:w-3/4 min-w-0">
           <div
             id="active-encounter"
             class="bg-white dark:bg-slate-700 rounded-xl shadow-lg p-4 lg:sticky lg:top-4 lg:self-start"

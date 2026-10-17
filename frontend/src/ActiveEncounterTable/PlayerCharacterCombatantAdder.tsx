@@ -72,6 +72,7 @@ export default function PlayerCharacterCombatantAdder(props) {
                         hp: "0",
                         id: getRandomId(),
                         initiative: Number(document.getElementById("pcPerception").value) + getRandomD20(),
+                        isPlayerCharacter: true,
                     };
                     props.setSelectedCreatures(() => [...props.selectedCreatures(), pcCombatant]);
                     document.getElementById("pcName").value = "";
