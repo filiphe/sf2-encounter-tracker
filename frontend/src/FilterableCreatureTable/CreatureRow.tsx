@@ -16,6 +16,7 @@ export default function CreatureRow(props) {
                 currentCreature.id = getRandomId();
                 currentCreature.initiative = Number(props.creature.perception.replace("+","")) + getRandomD20();
                 currentCreature.activeCombatant = false;
+                currentCreature.conditions = [];
                 props.setSelectedCreatures(() => [...props.selectedCreatures(), currentCreature]);
             }}
         >

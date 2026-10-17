@@ -1,6 +1,8 @@
 import { createSignal, createMemo, Show, For } from "solid-js";
 import AbilityModal from "../components/AbilityModal";
+import ConditionBadge from "../components/ConditionBadge";
 import { parseCreatureAbilities, isAttack, cleanAbilityName } from "../utils/abilitySearch";
+import { AppliedCondition, getModifiedStat, getAllModifiers, getSpecialEffects, parseStatValue, formatStatValue } from "../utils/conditionEffects";
 
 interface CreatureStatsModalProps {
   creature: any;
@@ -37,8 +39,76 @@ function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) =
   const abilities = createMemo(() => parsedAbilities().filter(a => !a.isAttack));
   const attacks = createMemo(() => parsedAbilities().filter(a => a.isAttack));
 
+  // Conditions on this creature
+  const conditions = createMemo((): AppliedCondition[] => props.creature.conditions ?? []);
+  const allModifiers = createMemo(() => getAllModifiers(conditions()));
+  const specialEffects = createMemo(() => getSpecialEffects(conditions()));
+
+  // Modified stats
+  const modifiedAc = createMemo(() => getModifiedStat(parseStatValue(props.creature.ac), conditions(), "ac"));
+  const modifiedPerception = createMemo(() => getModifiedStat(parseStatValue(props.creature.perception), conditions(), "perception"));
+  const modifiedFortitude = createMemo(() => getModifiedStat(parseStatValue(props.creature.fortitude), conditions(), "fortitude"));
+  const modifiedReflex = createMemo(() => getModifiedStat(parseStatValue(props.creature.reflex), conditions(), "reflex"));
+  const modifiedWill = createMemo(() => getModifiedStat(parseStatValue(props.creature.will), conditions(), "will"));
+
+  // Helper to render a stat with modifiers
+  const renderStat = (label: string, baseValue: string, modified: ReturnType<typeof getModifiedStat>) => {
+    const hasModifiers = modified.modifiers.length > 0;
+    return (
+      <div class={`text-center p-2 rounded-lg ${hasModifiers ? "bg-orange-100 dark:bg-orange-900/30" : "bg-slate-100 dark:bg-slate-800"}`}>
+        <p class="font-semibold text-slate-700 dark:text-slate-300">{label}</p>
+        <p class={hasModifiers ? "text-orange-600 dark:text-orange-400 font-bold" : "text-slate-800 dark:text-slate-200"}>
+          {hasModifiers ? (
+            <span title={modified.modifiers.map(m => `${formatStatValue(m.value)} (${m.source})`).join(", ")}>
+              {modified.finalValue}
+              <span class="text-xs ml-1 opacity-70">({baseValue})</span>
+            </span>
+          ) : (
+            baseValue
+          )}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <>
+      {/* Active Conditions */}
+      <Show when={conditions().length > 0}>
+        <div class="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+          <p class="font-semibold text-slate-700 dark:text-slate-300 mb-2">Active Conditions</p>
+          <div class="flex flex-wrap gap-1.5 mb-2">
+            <For each={conditions()}>
+              {(condition) => <ConditionBadge condition={condition} size="md" />}
+            </For>
+          </div>
+          {/* Numeric modifiers */}
+          <Show when={allModifiers().length > 0}>
+            <div class="text-xs space-y-0.5">
+              <p class="font-semibold text-slate-500 dark:text-slate-400 uppercase">Modifiers:</p>
+              <For each={allModifiers()}>
+                {(mod) => (
+                  <p class={mod.value < 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}>
+                    {mod.description} <span class="opacity-70">({mod.source})</span>
+                  </p>
+                )}
+              </For>
+            </div>
+          </Show>
+          {/* Special effects */}
+          <Show when={specialEffects().length > 0}>
+            <div class="text-xs space-y-0.5 mt-2">
+              <p class="font-semibold text-slate-500 dark:text-slate-400 uppercase">Special:</p>
+              <For each={specialEffects()}>
+                {(effect) => (
+                  <p class="text-slate-600 dark:text-slate-400">• {effect}</p>
+                )}
+              </For>
+            </div>
+          </Show>
+        </div>
+      </Show>
+
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="space-y-1">
           <p class="text-slate-700 dark:text-slate-300"><span class="font-semibold">Level:</span> {props.creature.level}</p>
@@ -46,34 +116,48 @@ function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) =
           <p class="text-slate-700 dark:text-slate-300"><span class="font-semibold">Traits:</span> {props.creature.trait}</p>
         </div>
         <div class="space-y-1">
-          <p class="text-slate-700 dark:text-slate-300">
-            <span class="font-semibold">HP:</span>{" "}
+          <p class="text-slate-700 dark:text-slate-300 flex items-center gap-1 whitespace-nowrap">
+            <span class="font-semibold">HP:</span>
             <input
-              class="bg-amber-200 dark:bg-amber-600 rounded px-2 py-1 w-20 text-center text-slate-800 dark:text-slate-100 font-semibold"
+              class="bg-amber-200 dark:bg-amber-600 rounded px-2 py-1 w-16 text-center text-slate-800 dark:text-slate-100 font-semibold"
               type="number"
               value={props.currentHp()}
               onInput={(e) => handleHpChange(Number(e.currentTarget.value))}
-            />{" "}
-            / {props.creature.hp}
+            />
+            <span>/ {props.creature.hp}</span>
           </p>
-          <p class="text-slate-700 dark:text-slate-300"><span class="font-semibold">AC:</span> {props.creature.ac}</p>
+          <p class="text-slate-700 dark:text-slate-300">
+            <span class="font-semibold">AC:</span>{" "}
+            <Show when={modifiedAc().modifiers.length > 0}>
+              <span class="text-orange-600 dark:text-orange-400 font-semibold" title={modifiedAc().modifiers.map(m => `${formatStatValue(m.value)} (${m.source})`).join(", ")}>
+                {modifiedAc().finalValue}
+              </span>
+              <span class="text-slate-500 dark:text-slate-400 text-sm"> ({props.creature.ac})</span>
+            </Show>
+            <Show when={modifiedAc().modifiers.length === 0}>
+              {props.creature.ac}
+            </Show>
+          </p>
+          <p class="text-slate-700 dark:text-slate-300">
+            <span class="font-semibold">Perception:</span>{" "}
+            <Show when={modifiedPerception().modifiers.length > 0}>
+              <span class="text-orange-600 dark:text-orange-400 font-semibold" title={modifiedPerception().modifiers.map(m => `${formatStatValue(m.value)} (${m.source})`).join(", ")}>
+                {formatStatValue(modifiedPerception().finalValue)}
+              </span>
+              <span class="text-slate-500 dark:text-slate-400 text-sm"> ({props.creature.perception})</span>
+            </Show>
+            <Show when={modifiedPerception().modifiers.length === 0}>
+              {props.creature.perception}
+            </Show>
+          </p>
           <p class="text-slate-700 dark:text-slate-300"><span class="font-semibold">Speed:</span> {props.creature.speed}</p>
         </div>
       </div>
 
       <div class="grid grid-cols-3 gap-4 mb-4">
-        <div class="text-center p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-          <p class="font-semibold text-slate-700 dark:text-slate-300">Fortitude</p>
-          <p class="text-slate-800 dark:text-slate-200">{props.creature.fortitude}</p>
-        </div>
-        <div class="text-center p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-          <p class="font-semibold text-slate-700 dark:text-slate-300">Reflex</p>
-          <p class="text-slate-800 dark:text-slate-200">{props.creature.reflex}</p>
-        </div>
-        <div class="text-center p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-          <p class="font-semibold text-slate-700 dark:text-slate-300">Will</p>
-          <p class="text-slate-800 dark:text-slate-200">{props.creature.will}</p>
-        </div>
+        {renderStat("Fortitude", String(props.creature.fortitude), modifiedFortitude())}
+        {renderStat("Reflex", String(props.creature.reflex), modifiedReflex())}
+        {renderStat("Will", String(props.creature.will), modifiedWill())}
       </div>
 
       {/* Abilities - clickable */}
@@ -241,7 +325,7 @@ export default function CreatureStatsModal(props: CreatureStatsModalProps) {
         if (e.target === e.currentTarget) props.onClose();
       }}
     >
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4 border border-slate-200 dark:border-slate-700">
+      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto m-4 border border-slate-200 dark:border-slate-700">
         <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-200 dark:border-slate-700">
           <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100">{props.creature.name}</h2>
           <button

@@ -1,4 +1,7 @@
-import { createSignal, createMemo, Show } from "solid-js";
+import { createSignal, createMemo, Show, For } from "solid-js";
+import ConditionAdder from "../components/ConditionAdder";
+import ConditionBadge from "../components/ConditionBadge";
+import { AppliedCondition, getModifiedStat, parseStatValue, formatStatValue } from "../utils/conditionEffects";
 
 // Color palette for duplicate creature indicators
 const DUPLICATE_COLORS = [
@@ -62,6 +65,7 @@ export default function ActiveEncounterRow(props: any) {
     String(props.creature.initiative ?? ""),
   );
   const [localHp, setLocalHp] = createSignal("");
+  const [showConditionAdder, setShowConditionAdder] = createSignal(false);
 
   const maxHp = createMemo(() => Number(props.creature.hp.split(" ")[0]));
   const currentHp = createMemo(() => props.creature.currentHp ?? maxHp());
@@ -90,6 +94,59 @@ export default function ActiveEncounterRow(props: any) {
     return DUPLICATE_COLORS[duplicateIndex() % DUPLICATE_COLORS.length];
   });
 
+  // Conditions on this creature
+  const conditions = createMemo((): AppliedCondition[] => props.creature.conditions ?? []);
+
+  // Modified AC (base + condition modifiers)
+  const baseAc = createMemo(() => parseStatValue(props.creature.ac));
+  const modifiedAc = createMemo(() => getModifiedStat(baseAc(), conditions(), "ac"));
+
+  const acDisplay = createMemo(() => {
+    const mod = modifiedAc();
+    if (mod.modifiers.length === 0) {
+      return { text: String(baseAc()), title: `AC: ${baseAc()}` };
+    }
+    const modifierStr = mod.modifiers
+      .map(m => `${formatStatValue(m.value)} (${m.source})`)
+      .join(", ");
+    return {
+      text: String(mod.finalValue),
+      title: `AC: ${baseAc()} → ${mod.finalValue} (${modifierStr})`
+    };
+  });
+
+  // Modified Perception (for tooltip)
+  const basePerception = createMemo(() => parseStatValue(props.creature.perception));
+  const modifiedPerception = createMemo(() => getModifiedStat(basePerception(), conditions(), "perception"));
+
+  const perceptionDisplay = createMemo(() => {
+    const mod = modifiedPerception();
+    if (mod.modifiers.length === 0) return null;
+    const modifierStr = mod.modifiers
+      .map(m => `${formatStatValue(m.value)} (${m.source})`)
+      .join(", ");
+    return `Perception: ${basePerception()} → ${mod.finalValue} (${modifierStr})`;
+  });
+
+  // Update creature's conditions
+  const updateConditions = (newConditions: AppliedCondition[]) => {
+    props.setSelectedCreatures(
+      props
+        .selectedCreatures()
+        .map((c: any) =>
+          c.id === props.creature.id ? { ...c, conditions: newConditions } : c,
+        ),
+    );
+  };
+
+  const handleAddCondition = (condition: AppliedCondition) => {
+    updateConditions([...conditions(), condition]);
+  };
+
+  const handleRemoveCondition = (conditionId: string) => {
+    updateConditions(conditions().filter(c => c.conditionId !== conditionId));
+  };
+
   const handleHpBlur = () => {
     const raw = localHp().trim();
     if (raw === "") {
@@ -111,7 +168,7 @@ export default function ActiveEncounterRow(props: any) {
 
   return (
     <div
-      class={`grid grid-cols-[3rem_2.25rem_3.5rem_1fr_1.5rem] gap-1 items-center py-1.5 px-1 rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${isActiveCombatant ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
+      class={`rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${isActiveCombatant ? 'bg-blue-100 dark:bg-blue-900' : ''}`}
       onClick={() => props.onClick?.()}
       onDblClick={() => {
         props.setSelectedCreatures(
@@ -121,67 +178,107 @@ export default function ActiveEncounterRow(props: any) {
         );
       }}
     >
-      <div class="flex items-center justify-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-        <span class="text-xs w-3 text-center">{isActiveCombatant ? "👉" : ""}</span>
-        <input
-          class="bg-transparent w-7 text-center text-sm text-slate-800 dark:text-slate-200"
-          type="text"
-          value={localInitiative()}
-          onInput={(e) => {
-            setLocalInitiative(e.currentTarget.value);
-          }}
-          onBlur={() => {
-            const raw = localInitiative();
-            const val = raw === "" ? "" : Number(raw);
+      {/* Main row */}
+      <div class="grid grid-cols-[3rem_2.25rem_3.5rem_1fr_1.5rem] gap-1 items-center py-1.5 px-1">
+        <div class="flex items-center justify-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+          <span class="text-xs w-3 text-center">{isActiveCombatant ? "👉" : ""}</span>
+          <input
+            class="bg-transparent w-7 text-center text-sm text-slate-800 dark:text-slate-200"
+            type="text"
+            value={localInitiative()}
+            onInput={(e) => {
+              setLocalInitiative(e.currentTarget.value);
+            }}
+            onBlur={() => {
+              const raw = localInitiative();
+              const val = raw === "" ? "" : Number(raw);
+              props.setSelectedCreatures(
+                props
+                  .selectedCreatures()
+                  .map((c: any) =>
+                    c.id === props.creature.id ? { ...c, initiative: val } : c,
+                  ),
+              );
+            }}
+          />
+        </div>
+        <p
+          class={`text-center text-sm ${modifiedAc().modifiers.length > 0 ? "text-orange-600 dark:text-orange-400 font-semibold" : "text-slate-800 dark:text-slate-200"}`}
+          title={acDisplay().title + (perceptionDisplay() ? `\n${perceptionDisplay()}` : "")}
+        >
+          {acDisplay().text}
+        </p>
+        <div class="flex justify-center" onClick={(e) => e.stopPropagation()}>
+          <input
+            class={`${hpColor()} rounded px-1 py-0.5 text-center text-white font-bold text-sm w-12`}
+            type="text"
+            value={localHp() || currentHp()}
+            placeholder="HP"
+            title="Enter a number or expression (e.g., 50, -10, +5, 30*2)"
+            onInput={(e) => {
+              setLocalHp(e.currentTarget.value);
+            }}
+            onBlur={handleHpBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
+          />
+        </div>
+        <p class="truncate text-sm text-slate-800 dark:text-slate-200 flex items-center gap-1">
+          <Show when={indicatorColor()}>
+            <span
+              class={`inline-block w-2 h-2 rounded-full shrink-0 ${indicatorColor()}`}
+              title={`Duplicate #${duplicateIndex() + 1}`}
+            />
+          </Show>
+          {props.creature.name}
+        </p>
+        <button
+          class="text-slate-400 hover:text-red-500 text-center text-sm transition-colors px-1"
+          onClick={(e) => {
+            e.stopPropagation();
             props.setSelectedCreatures(
-              props
-                .selectedCreatures()
-                .map((c: any) =>
-                  c.id === props.creature.id ? { ...c, initiative: val } : c,
-                ),
+              props.selectedCreatures().filter((c: any) => c.id !== props.creature.id)
             );
           }}
-        />
+        >
+          🗑️
+        </button>
       </div>
-      <p class="text-center text-sm text-slate-800 dark:text-slate-200">{props.creature.ac}</p>
-      <div class="flex justify-center" onClick={(e) => e.stopPropagation()}>
-        <input
-          class={`${hpColor()} rounded px-1 py-0.5 text-center text-white font-bold text-sm w-12`}
-          type="text"
-          value={localHp() || currentHp()}
-          placeholder="HP"
-          title="Enter a number or expression (e.g., 50, -10, +5, 30*2)"
-          onInput={(e) => {
-            setLocalHp(e.currentTarget.value);
-          }}
-          onBlur={handleHpBlur}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.currentTarget.blur();
-            }
-          }}
-        />
-      </div>
-      <p class="truncate text-sm text-slate-800 dark:text-slate-200 flex items-center gap-1">
-        <Show when={indicatorColor()}>
-          <span
-            class={`inline-block w-2 h-2 rounded-full shrink-0 ${indicatorColor()}`}
-            title={`Duplicate #${duplicateIndex() + 1}`}
-          />
-        </Show>
-        {props.creature.name}
-      </p>
-      <button
-        class="text-slate-400 hover:text-red-500 text-center text-sm transition-colors px-1"
-        onClick={(e) => {
-          e.stopPropagation();
-          props.setSelectedCreatures(
-            props.selectedCreatures().filter((c: any) => c.id !== props.creature.id)
-          );
-        }}
+
+      {/* Conditions row */}
+      <div
+        class="flex flex-wrap items-center gap-1 px-1 pb-1.5"
+        onClick={(e) => e.stopPropagation()}
       >
-        🗑️
-      </button>
+        <For each={conditions()}>
+          {(condition) => (
+            <ConditionBadge
+              condition={condition}
+              size="sm"
+              onRemove={() => handleRemoveCondition(condition.conditionId)}
+            />
+          )}
+        </For>
+        <button
+          class="inline-flex items-center text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-600 dark:text-slate-300 transition-colors"
+          onClick={() => setShowConditionAdder(true)}
+          title="Add condition"
+        >
+          + Condition
+        </button>
+      </div>
+
+      {/* Condition Adder Modal */}
+      <Show when={showConditionAdder()}>
+        <ConditionAdder
+          existingConditions={conditions()}
+          onAdd={handleAddCondition}
+          onClose={() => setShowConditionAdder(false)}
+        />
+      </Show>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from "solid-js";
+import { For, Show, createSignal, createMemo } from "solid-js";
 
 import ActiveEncounterRow from "./ActiveEncounterRow";
 import PlayerCharacterCombatantAdder from "./PlayerCharacterCombatantAdder";
@@ -6,16 +6,26 @@ import CreatureStatsModal from "../CreatureStatsModal/CreatureStatsModal";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 
 export default function ActiveEncounterTable(props) {
-    const [selectedCreature, setSelectedCreature] = createSignal<any>(null);
+    // Store the selected creature's ID, not the object snapshot
+    // This ensures the modal/panel always shows the latest data
+    const [selectedCreatureId, setSelectedCreatureId] = createSignal<number | null>(null);
     // Show side panel on xl screens (1280px+) where there's enough room
     const isWideScreen = useMediaQuery("(min-width: 1280px)");
+
+    // Derive the current creature from the selectedCreatures array
+    // This automatically updates when conditions, HP, or other stats change
+    const selectedCreature = createMemo(() => {
+        const id = selectedCreatureId();
+        if (id === null) return null;
+        return props.selectedCreatures().find((c: any) => c.id === id) ?? null;
+    });
 
     const handleUpdateHp = (creatureId: number, newHp: number) => {
         const updatedCreatures = props.selectedCreatures().map((c: any) =>
             c.id === creatureId ? { ...c, currentHp: newHp } : c
         );
         props.setSelectedCreatures(updatedCreatures);
-        setSelectedCreature(updatedCreatures.find((c: any) => c.id === creatureId));
+        // No need to update selectedCreature - the memo handles it automatically
     };
 
     return (
@@ -45,7 +55,7 @@ export default function ActiveEncounterTable(props) {
                                     onClick={() => {
                                         // Don't open stats for player characters
                                         if (!creature.isPlayerCharacter) {
-                                            setSelectedCreature(creature);
+                                            setSelectedCreatureId(creature.id);
                                         }
                                     }}
                                 />
@@ -58,8 +68,8 @@ export default function ActiveEncounterTable(props) {
                     <div class="xl:w-80 xl:shrink-0">
                         <CreatureStatsModal
                             creature={selectedCreature()}
-                            onClose={() => setSelectedCreature(null)}
-                            onUpdateHp={(hp) => handleUpdateHp(selectedCreature().id, hp)}
+                            onClose={() => setSelectedCreatureId(null)}
+                            onUpdateHp={(hp) => handleUpdateHp(selectedCreature()!.id, hp)}
                             variant="panel"
                         />
                     </div>
@@ -69,8 +79,8 @@ export default function ActiveEncounterTable(props) {
             <Show when={selectedCreature() && !isWideScreen()}>
                 <CreatureStatsModal
                     creature={selectedCreature()}
-                    onClose={() => setSelectedCreature(null)}
-                    onUpdateHp={(hp) => handleUpdateHp(selectedCreature().id, hp)}
+                    onClose={() => setSelectedCreatureId(null)}
+                    onUpdateHp={(hp) => handleUpdateHp(selectedCreature()!.id, hp)}
                     variant="modal"
                 />
             </Show>
