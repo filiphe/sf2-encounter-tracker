@@ -2,7 +2,7 @@ import { createSignal, createMemo, Show, For } from "solid-js";
 import AbilityModal from "../components/AbilityModal";
 import ConditionBadge from "../components/ConditionBadge";
 import { parseCreatureAbilities, isAttack, cleanAbilityName } from "../utils/abilitySearch";
-import { AppliedCondition, getModifiedStat, getAllModifiers, getSpecialEffects, parseStatValue, formatStatValue } from "../utils/conditionEffects";
+import { AppliedCondition, getModifiedStat, getModifiedSaveDc, getAllModifiers, getSpecialEffects, parseStatValue, formatStatValue } from "../utils/conditionEffects";
 
 interface CreatureStatsModalProps {
   creature: any;
@@ -51,14 +51,25 @@ function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) =
   const modifiedReflex = createMemo(() => getModifiedStat(parseStatValue(props.creature.reflex), conditions(), "reflex"));
   const modifiedWill = createMemo(() => getModifiedStat(parseStatValue(props.creature.will), conditions(), "will"));
 
-  // Helper to render a stat with modifiers
-  const renderStat = (label: string, baseValue: string, modified: ReturnType<typeof getModifiedStat>) => {
-    const hasModifiers = modified.modifiers.length > 0;
+  // Save DCs (10 + save bonus, plus any DC-specific condition penalties)
+  const fortitudeDc = createMemo(() => getModifiedSaveDc(parseStatValue(props.creature.fortitude), conditions(), "fortitude"));
+  const reflexDc = createMemo(() => getModifiedSaveDc(parseStatValue(props.creature.reflex), conditions(), "reflex"));
+  const willDc = createMemo(() => getModifiedSaveDc(parseStatValue(props.creature.will), conditions(), "will"));
+
+  // Helper to render a stat with modifiers; optionally shows a DC (10 + value) line
+  const renderStat = (
+    label: string,
+    baseValue: string,
+    modified: ReturnType<typeof getModifiedStat>,
+    dc?: ReturnType<typeof getModifiedSaveDc>
+  ) => {
+    const hasModifiers = modified.modifiers.length > 0 || (dc?.modifiers.length ?? 0) > 0;
+    const baseDc = 10 + parseStatValue(baseValue);
     return (
       <div class={`text-center p-2 rounded-lg ${hasModifiers ? "bg-orange-100 dark:bg-orange-900/30" : "bg-slate-100 dark:bg-slate-800"}`}>
         <p class="font-semibold text-slate-700 dark:text-slate-300">{label}</p>
-        <p class={hasModifiers ? "text-orange-600 dark:text-orange-400 font-bold" : "text-slate-800 dark:text-slate-200"}>
-          {hasModifiers ? (
+        <p class={modified.modifiers.length > 0 ? "text-orange-600 dark:text-orange-400 font-bold" : "text-slate-800 dark:text-slate-200"}>
+          {modified.modifiers.length > 0 ? (
             <span title={modified.modifiers.map(m => `${formatStatValue(m.value)} (${m.source})`).join(", ")}>
               {modified.finalValue}
               <span class="text-xs ml-1 opacity-70">({baseValue})</span>
@@ -67,6 +78,21 @@ function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) =
             baseValue
           )}
         </p>
+        <Show when={dc}>
+          {(d) => (
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              <span class="font-semibold">DC</span>{" "}
+              {d().modifiers.length > 0 ? (
+                <span class="text-orange-600 dark:text-orange-400 font-semibold" title={d().modifiers.map(m => `${formatStatValue(m.value)} (${m.source})`).join(", ")}>
+                  {d().finalValue}
+                  <span class="text-xs ml-1 opacity-70">({baseDc})</span>
+                </span>
+              ) : (
+                baseDc
+              )}
+            </p>
+          )}
+        </Show>
       </div>
     );
   };
@@ -155,9 +181,9 @@ function CreatureStatsContent(props: { creature: any; onUpdateHp: (hp: number) =
       </div>
 
       <div class="grid grid-cols-3 gap-4 mb-4">
-        {renderStat("Fortitude", String(props.creature.fortitude), modifiedFortitude())}
-        {renderStat("Reflex", String(props.creature.reflex), modifiedReflex())}
-        {renderStat("Will", String(props.creature.will), modifiedWill())}
+        {renderStat("Fortitude", String(props.creature.fortitude), modifiedFortitude(), fortitudeDc())}
+        {renderStat("Reflex", String(props.creature.reflex), modifiedReflex(), reflexDc())}
+        {renderStat("Will", String(props.creature.will), modifiedWill(), willDc())}
       </div>
 
       {/* Abilities - clickable */}

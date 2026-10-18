@@ -11,7 +11,7 @@ interface ConditionAdderProps {
 export default function ConditionAdder(props: ConditionAdderProps) {
   const [searchQuery, setSearchQuery] = createSignal("");
   const [selectedCondition, setSelectedCondition] = createSignal<Condition | null>(null);
-  const [conditionValue, setConditionValue] = createSignal(1);
+  const [conditionValue, setConditionValue] = createSignal<number | string>(1);
 
   const filteredConditions = createMemo(() => searchConditions(searchQuery()));
 
@@ -35,11 +35,8 @@ export default function ConditionAdder(props: ConditionAdderProps) {
 
   const selectCondition = (condition: Condition) => {
     setSelectedCondition(condition);
-    // Set default value based on condition type
-    if (condition.id === "dying") setConditionValue(1);
-    else if (condition.id === "doomed") setConditionValue(1);
-    else if (condition.id === "persistent-damage") setConditionValue(1);
-    else setConditionValue(1);
+    // Persistent Damage takes a dice expression (e.g., "1d6 Fire"); other conditions default to 1
+    setConditionValue(condition.id === "persistent-damage" ? "1d6" : 1);
   };
 
   return (
@@ -114,14 +111,27 @@ export default function ConditionAdder(props: ConditionAdderProps) {
                   <label class="text-sm font-medium text-slate-700 dark:text-slate-300">
                     {condition().valueLabel || "Value"}:
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    class="w-16 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-center"
-                    value={conditionValue()}
-                    onInput={(e) => setConditionValue(Number(e.currentTarget.value))}
-                  />
+                  <Show
+                    when={condition().valueInputType === "text"}
+                    fallback={
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        class="w-16 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-center"
+                        value={conditionValue()}
+                        onInput={(e) => setConditionValue(Number(e.currentTarget.value))}
+                      />
+                    }
+                  >
+                    <input
+                      type="text"
+                      class="w-32 px-2 py-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                      placeholder="e.g. 1d6 Fire"
+                      value={conditionValue()}
+                      onInput={(e) => setConditionValue(e.currentTarget.value)}
+                    />
+                  </Show>
                 </div>
               </Show>
 
@@ -145,7 +155,9 @@ export default function ConditionAdder(props: ConditionAdderProps) {
                   <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Special:</p>
                   <For each={condition().specialEffects ?? []}>
                     {(effect) => (
-                      <p class="text-xs text-slate-600 dark:text-slate-400">• {effect}</p>
+                      <p class="text-xs text-slate-600 dark:text-slate-400">
+                        • {effect.replaceAll("X", String(condition().hasValue ? conditionValue() : 1))}
+                      </p>
                     )}
                   </For>
                 </div>

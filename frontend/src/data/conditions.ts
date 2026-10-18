@@ -37,6 +37,8 @@ export interface Condition {
   hasValue: boolean;
   /** Label for the value input (e.g., "Value", "Actions lost") */
   valueLabel?: string;
+  /** Input type for the value: "number" (default) or free-form "text" (e.g., persistent damage "1d6 Fire") */
+  valueInputType?: "number" | "text";
   /** Mechanical effects. For value-based conditions, valuePerUnit is multiplied by the condition value. */
   effects: ConditionEffect[];
   /** Special effects that can't be modeled as numeric modifiers */
@@ -362,6 +364,7 @@ export const CONDITIONS: Condition[] = [
     summary: "You're taking damage from an ongoing effect, such as being lit on fire.",
     hasValue: true,
     valueLabel: "Damage",
+    valueInputType: "text",
     color: "bg-orange-600",
     effects: [],
     specialEffects: ["Take X damage at the start of each turn", "Requires flat check (DC 15) to end"]

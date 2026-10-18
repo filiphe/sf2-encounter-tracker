@@ -1,6 +1,7 @@
 import { createSignal, createMemo, Show, For } from "solid-js";
 import ConditionAdder from "../components/ConditionAdder";
 import ConditionBadge from "../components/ConditionBadge";
+import ConditionEditor from "../components/ConditionEditor";
 import { AppliedCondition, getModifiedStat, parseStatValue, formatStatValue } from "../utils/conditionEffects";
 
 // Color palette for duplicate creature indicators
@@ -66,6 +67,7 @@ export default function ActiveEncounterRow(props: any) {
   );
   const [localHp, setLocalHp] = createSignal("");
   const [showConditionAdder, setShowConditionAdder] = createSignal(false);
+  const [editingCondition, setEditingCondition] = createSignal<AppliedCondition | null>(null);
 
   const maxHp = createMemo(() => Number(props.creature.hp.split(" ")[0]));
   const currentHp = createMemo(() => props.creature.currentHp ?? maxHp());
@@ -145,6 +147,10 @@ export default function ActiveEncounterRow(props: any) {
 
   const handleRemoveCondition = (conditionId: string) => {
     updateConditions(conditions().filter(c => c.conditionId !== conditionId));
+  };
+
+  const handleUpdateCondition = (updated: AppliedCondition) => {
+    updateConditions(conditions().map(c => c.conditionId === updated.conditionId ? updated : c));
   };
 
   const handleHpBlur = () => {
@@ -258,6 +264,7 @@ export default function ActiveEncounterRow(props: any) {
             <ConditionBadge
               condition={condition}
               size="sm"
+              onClick={() => setEditingCondition(condition)}
               onRemove={() => handleRemoveCondition(condition.conditionId)}
             />
           )}
@@ -278,6 +285,18 @@ export default function ActiveEncounterRow(props: any) {
           onAdd={handleAddCondition}
           onClose={() => setShowConditionAdder(false)}
         />
+      </Show>
+
+      {/* Condition Editor Modal */}
+      <Show when={editingCondition()}>
+        {(editing) => (
+          <ConditionEditor
+            condition={editing()}
+            onSave={handleUpdateCondition}
+            onRemove={() => handleRemoveCondition(editing().conditionId)}
+            onClose={() => setEditingCondition(null)}
+          />
+        )}
       </Show>
     </div>
   );

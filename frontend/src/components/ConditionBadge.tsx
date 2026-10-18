@@ -18,12 +18,18 @@ export default function ConditionBadge(props: ConditionBadgeProps) {
 
   const sizeClasses = () => props.size === "sm" ? "text-xs px-1.5 py-0.5" : "text-sm px-2 py-1";
 
+  const title = () => {
+    const summary = conditionData()?.summary;
+    if (props.onClick) return summary ? `${summary} (click to edit)` : "Click to edit";
+    return summary;
+  };
+
   return (
     <span
       class={`inline-flex items-center gap-1 ${sizeClasses()} rounded font-medium text-white ${props.condition.color} ${
         props.onClick ? "cursor-pointer hover:opacity-80" : ""
       } transition-opacity`}
-      title={conditionData()?.summary}
+      title={title()}
       onClick={(e) => {
         e.stopPropagation();
         props.onClick?.();
